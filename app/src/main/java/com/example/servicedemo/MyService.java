@@ -28,7 +28,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class MyService extends Service {
-    private ServiceHandler serviceHandler;
+    private ThreadHandler threadHandler;
     private static final String CHANNEL_ID = "NOTIF_C_1";
     private NotificationManagerCompat notificationManagerCompat;
 
@@ -42,7 +42,7 @@ public class MyService extends Service {
         HandlerThread handlerThread = new HandlerThread("ServiceHandler", Process.THREAD_PRIORITY_BACKGROUND);
         handlerThread.start();
 
-        serviceHandler = new ServiceHandler(handlerThread.getLooper());
+        threadHandler = new ThreadHandler(handlerThread.getLooper());
 
         createNotificationChannel();
         notificationManagerCompat = NotificationManagerCompat.from(this);
@@ -57,7 +57,7 @@ public class MyService extends Service {
         msg.obj = data;
         msg.what = 0;
         msg.arg1 = startId;
-        serviceHandler.sendMessage(msg);
+        threadHandler.sendMessage(msg);
         //OR
         //posting a runnable to message queue
         /*serviceHandler.post(new Runnable() {
@@ -132,8 +132,8 @@ public class MyService extends Service {
         }
     }
 
-    public class ServiceHandler extends Handler{
-        public ServiceHandler(@NonNull Looper looper) {
+    public class ThreadHandler extends Handler{
+        public ThreadHandler(@NonNull Looper looper) {
             super(looper);
         }
 
