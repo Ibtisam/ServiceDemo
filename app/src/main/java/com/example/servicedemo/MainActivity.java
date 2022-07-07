@@ -25,10 +25,9 @@ public class MainActivity extends AppCompatActivity {
     private Button startB, bindB;
     private Intent servIntent;
 
+    private boolean serviceBouded = false;
+    private MyServiceConn myServiceConn;
     private MyService myService;
-    private boolean serviceBounded = false;
-    private ServiceConnection serviceConnection;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,13 +53,12 @@ public class MainActivity extends AppCompatActivity {
         bindB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(serviceBounded){
-                    myService.setContext(MainActivity.this);
+                if(serviceBouded){
+                    //IPC
                     Message msg = new Message();
-                    msg.what = 0;
                     msg.obj = editText.getText().toString();
+                    msg.what = 0;
                     myService.getThreadHandler().sendMessage(msg);
-                    //String hash = myService.hashData(editText.getText().toString());
                     //textView.append(hash+"\n");
                 }
             }
@@ -71,9 +69,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        serviceConnection = new MyServiceConnection();
+        myServiceConn = new MyServiceConn();
         Intent intent = new Intent(this, MyService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        bindService(intent, myServiceConn, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -84,23 +82,24 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopService(servIntent);
-        unbindService(serviceConnection);
-        serviceBounded = false;
+        unbindService(myServiceConn);
+        serviceBouded = false;
+        //stopService(servIntent);
     }
 
-    public class MyServiceConnection implements ServiceConnection{
+    public class MyServiceConn implements ServiceConnection{
 
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            MyService.ServiceBider binder = (MyService.ServiceBider) iBinder;
+            MyService.MyServiceBinder binder = (MyService.MyServiceBinder) iBinder;
             myService = binder.getMyService();
-            serviceBounded = true;
+            serviceBouded = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
-            serviceBounded = false;
+
+            serviceBouded = false;
         }
     }
 

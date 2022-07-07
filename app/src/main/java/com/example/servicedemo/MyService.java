@@ -34,15 +34,13 @@ public class MyService extends Service {
     private ThreadHandler threadHandler;
     private static final String CHANNEL_ID = "NOTIF_C_1";
     private NotificationManagerCompat notificationManagerCompat;
-
-    private final ServiceBider serviceBider = new ServiceBider();
-    private Context context;
+    private final MyServiceBinder myServiceBinder = new MyServiceBinder();
 
     public MyService() {
     }
 
-    public void setContext(Context context) {
-        this.context = context;
+    public ThreadHandler getThreadHandler() {
+        return threadHandler;
     }
 
     @Override
@@ -58,7 +56,7 @@ public class MyService extends Service {
         notificationManagerCompat = NotificationManagerCompat.from(this);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String data = intent.getStringExtra("DATA");
@@ -69,14 +67,6 @@ public class MyService extends Service {
         msg.arg1 = startId;
         threadHandler.sendMessage(msg);
 
-        /*Notification notification = new Notification.Builder(this, CHANNEL_ID)
-                .setContentTitle("Foreground Service")
-                .setContentText("This is a foreground service message")
-                .setSmallIcon(R.drawable.ic_notification)
-                .addAction(null)
-                .build();
-
-        startForeground(23, notification);*/
         //OR
         //posting a runnable to message queue
         /*threadHandler.post(new Runnable() {
@@ -87,6 +77,15 @@ public class MyService extends Service {
             }
         });
         stopSelf();*/
+        /*Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                .setContentTitle("Foreground Service")
+                .setContentText("This is a message from foreground service")
+                .setSmallIcon(R.drawable.ic_notification)
+                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+                .build();
+
+        startForeground(23, notification);
+*/
 
         return START_STICKY;
     }
@@ -104,7 +103,7 @@ public class MyService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return serviceBider;
+        return myServiceBinder;
     }
 
     public String hashData(Object obj){
@@ -150,14 +149,10 @@ public class MyService extends Service {
         }
     }
 
-    public class ServiceBider extends Binder{
+    public class MyServiceBinder extends Binder{
         MyService getMyService(){
             return MyService.this;
         }
-    }
-
-    public ThreadHandler getThreadHandler() {
-        return threadHandler;
     }
 
     public class ThreadHandler extends Handler{
@@ -165,7 +160,7 @@ public class MyService extends Service {
             super(looper);
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.O)
+        @RequiresApi(api = Build.VERSION_CODES.S)
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
@@ -176,19 +171,14 @@ public class MyService extends Service {
                             .setContentTitle("Foreground Service")
                             .setContentText("Hash: "+hash)
                             .setSmallIcon(R.drawable.ic_notification)
-                            .addAction(null)
+                            .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
                             .build();
                     notificationManagerCompat.notify(23, notification);*/
-                    ((MainActivity)context).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            TextView textView = ((MainActivity) context).findViewById(R.id.hashTV);
-                            textView.append(hash+"\n");
-                        }
-                    });
                     Toast.makeText(MyService.this, hash, Toast.LENGTH_SHORT).show();
+                    stopSelf();
                     break;
             }
         }
     }
+
 }
